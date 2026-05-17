@@ -1,0 +1,187 @@
+STEPS 
+1.Create a Database employee_db in MySQL using following queries
+
+CREATE DATABASE employee_db;
+USE employee_db;
+
+2.Create Tables In Database 
+CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    salary DECIMAL(10,2),
+    email VARCHAR(100) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+3.Download JDBC Driver
+https://dev.mysql.com/downloads/connector/j/
+MySQL → mysql-connector-j
+
+4.Write a following JAVA code
+
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Scanner;
+
+public class EmployeeManagement {
+   static final String URL = "jdbc:mysql://localhost:3306/companydb?useSSL=false&allowPublicKeyRetrieval=true";
+   static final String USER = "root";
+   static final String PASSWORD = "avcoe";
+
+   public EmployeeManagement() {
+   }
+
+   public static void main(String[] var0) {
+      try {
+         Class.forName("com.mysql.cj.jdbc.Driver");
+         Connection var1 = DriverManager.getConnection("jdbc:mysql://localhost:3306/companydb?useSSL=false&allowPublicKeyRetrieval=true", "root", "avcoe");
+         Scanner var2 = new Scanner(System.in);
+         System.out.println("Connected Successfully!\n");
+
+         while(true) {
+            System.out.println("===== EMPLOYEE MANAGEMENT =====");
+            System.out.println("1. Add Employee");
+            System.out.println("2. View Employees");
+            System.out.println("3. Update Employee");
+            System.out.println("4. Delete Employee");
+            System.out.println("5. Exit");
+            System.out.print("Choose: ");
+            int var3 = var2.nextInt();
+            switch (var3) {
+               case 1:
+                  var2.nextLine();
+                  System.out.print("Enter Name: ");
+                  String var4 = var2.nextLine();
+                  System.out.print("Enter Salary: ");
+                  double var5 = var2.nextDouble();
+                  PreparedStatement var7 = var1.prepareStatement("INSERT INTO employees (name, salary) VALUES (?, ?)");
+                  var7.setString(1, var4);
+                  var7.setDouble(2, var5);
+                  var7.executeUpdate();
+                  System.out.println("Employee Added!\n");
+                  break;
+               case 2:
+                  ResultSet var8 = var1.createStatement().executeQuery("SELECT * FROM employees");
+                  System.out.println("\nID | Name | Salary");
+                  System.out.println("---------------------");
+
+                  while(var8.next()) {
+                     PrintStream var10000 = System.out;
+                     int var10001 = var8.getInt("id");
+                     var10000.println(var10001 + " | " + var8.getString("name") + " | " + var8.getDouble("salary"));
+                  }
+
+                  System.out.println();
+                  break;
+               case 3:
+                  System.out.print("Enter Employee ID to Update: ");
+                  int var9 = var2.nextInt();
+                  System.out.print("Enter New Salary: ");
+                  double var10 = var2.nextDouble();
+                  PreparedStatement var12 = var1.prepareStatement("UPDATE employees SET salary=? WHERE id=?");
+                  var12.setDouble(1, var10);
+                  var12.setInt(2, var9);
+                  int var13 = var12.executeUpdate();
+                  if (var13 > 0) {
+                     System.out.println("Employee Updated Successfully!\n");
+                  } else {
+                     System.out.println("Employee Not Found!\n");
+                  }
+                  break;
+               case 4:
+                  System.out.print("Enter Employee ID to Delete: ");
+                  int var14 = var2.nextInt();
+                  PreparedStatement var15 = var1.prepareStatement("DELETE FROM employees WHERE id=?");
+                  var15.setInt(1, var14);
+                  int var16 = var15.executeUpdate();
+                  if (var16 > 0) {
+                     System.out.println("Employee Deleted Successfully!\n");
+                  } else {
+                     System.out.println("Employee Not Found!\n");
+                  }
+                  break;
+               case 5:
+                  System.out.println("Exiting Program...");
+                  var1.close();
+                  var2.close();
+                  return;
+               default:
+                  System.out.println("Invalid Choice!\n");
+            }
+         }
+      } catch (Exception var17) {
+         System.out.println("Database Error: " + var17.getMessage());
+      }
+   }
+}
+
+5.Save This code in Employee Management folder
+For Connecting The JAVA code to the MySQL Database using MySQL jar file put MySQL jar file in same folder where the JAVA code is in "lib" file
+
+6.Executing the JAVA code
+Run the JAVA code using Visual Studio Code
+
+Output:
+1. Add Employee
+2. View Employees
+3. Update Employee
+4. Delete Employee
+5. Exit
+
+
+7.Execute Above Operations one by one for inserting values in database
+
+for example:
+
+===== EMPLOYEE MANAGEMENT =====
+1. Add Employee
+2. View Employees
+3. Update Employee
+4. Delete Employee
+5. Exit
+Choose: 1
+Enter Name: Harry
+Enter Salary: 100000
+Employee Added!
+
+===== EMPLOYEE MANAGEMENT =====
+1. Add Employee
+2. View Employees
+3. Update Employee
+4. Delete Employee
+5. Exit
+Choose: 2
+ Harry | 100000.0
+
+===== EMPLOYEE MANAGEMENT =====
+1. Add Employee
+2. View Employees
+3. Update Employee
+4. Delete Employee
+5. Exit
+Choose: 3
+Enter Employee ID to Update: 1
+Enter New Salary: 200000
+Employee Updated Successfully!
+
+===== EMPLOYEE MANAGEMENT =====
+1. Add Employee
+2. View Employees
+3. Update Employee
+4. Delete Employee
+5. Exit
+Choose: 4
+Enter Employee ID to Delete: 1
+Employee Deleted Successfully!
+8. In MySQL check for the inserte data using following queries
+SHOW DATABASES;
+
+USE employee_db;
+
+SHOW TABLES;
+
+SELECT * FROM employees;
