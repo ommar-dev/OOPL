@@ -1,0 +1,304 @@
+Steps:
+1.Create a Database student_db in MySQL using following queries
+
+CREATE DATABASE student_db;
+USE student_db;
+
+2.Create Tables In Database 
+CREATE TABLE students (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    age INT,
+    course VARCHAR(100),
+    marks DOUBLE
+);
+3.Download JDBC Driver
+https://dev.mysql.com/downloads/connector/j/
+MySQL → mysql-connector-j
+
+4.Write a following JAVA code
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class StudentManagement {
+
+    static final String URL = "jdbc:mysql://localhost:3306/student_db";
+    static final String USER = "root";
+    static final String PASSWORD = "password"; // change
+
+    static Connection con;
+
+    // CONNECT DATABASE
+    public static void connectDB() {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            con = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("Connected to DB!");
+        } catch (Exception e) {
+            System.out.println("Connection Error: " + e.getMessage());
+        }
+    }
+
+    // CREATE (ADD STUDENT) with TRANSACTION
+    public static void addStudent(int id, String name, int age, String course, double marks) {
+        String sql = "INSERT INTO students VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            con.setAutoCommit(false); // START TRANSACTION
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.setString(2, name);
+            ps.setInt(3, age);
+            ps.setString(4, course);
+            ps.setDouble(5, marks);
+
+            ps.executeUpdate();
+
+            con.commit(); // COMMIT
+            System.out.println("Student Added!");
+
+        } catch (Exception e) {
+            try {
+                con.rollback(); // ROLLBACK if error
+            } catch (Exception ex) {
+                System.out.println("Rollback Error: " + ex.getMessage());
+            }
+            System.out.println("Error: " + e.getMessage());
+        } finally {
+            try {
+                con.setAutoCommit(true);
+            } catch (Exception e) {}
+        }
+    }
+
+    // READ ALL
+    public static void viewStudents() {
+        try {
+            String sql = "SELECT * FROM students";
+            Statement st = con.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+
+            System.out.println("\n--- Student List ---");
+            while (rs.next()) {
+                System.out.println(
+                    rs.getInt("id") + " | " +
+                    rs.getString("name") + " | " +
+                    rs.getInt("age") + " | " +
+                    rs.getString("course") + " | " +
+                    rs.getDouble("marks")
+                );
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // READ ONE
+    public static void getStudent(int id) {
+        try {
+            String sql = "SELECT * FROM students WHERE id=?";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, id);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("\n--- Student Info ---");
+                System.out.println("ID: " + rs.getInt("id"));
+                System.out.println("Name: " + rs.getString("name"));
+                System.out.println("Age: " + rs.getInt("age"));
+                System.out.println("Course: " + rs.getString("course"));
+                System.out.println("Marks: " + rs.getDouble("marks"));
+            } else {
+                System.out.println("Student not found!");
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // UPDATE with TRANSACTION
+    public static void updateStudent(int id, String name, int age, String course, double marks) {
+        String sql = "UPDATE students SET name=?, age=?, course=?, marks=? WHERE id=?";
+
+        try {
+            con.setAutoCommit(false);
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, name);
+            ps.setInt(2, age);
+            ps.setString(3, course);
+            ps.setDouble(4, marks);
+            ps.setInt(5, id);
+
+            int rows = ps.executeUpdate();
+
+            if (rows > 0) {
+                con.commit();
+                System.out.println("Updated successfully!");
+            } else {
+                con.rollback();
+                System.out.println("Student not found!");
+            }
+
+        } catch (Exception e) {
+            try { con.rollback(); } catch (Exception ex) {}
+            System.out.println("Error: " + e.getMessage());
+        } finally {
+            try { con.setAutoCommit(true); } catch (Exception e) {}
+        }
+    }
+
+    // DELETE with TRANSACTION
+    public static void deleteStudent(int id) {
+        String sql = "DELETE FROM students WHERE id=?";
+
+        try {
+            con.setAutoCommit(false);
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, id);
+
+            int rows = ps.executeUpdate();
+
+            if (rows > 0) {
+                con.commit();
+                System.out.println("Deleted successfully!");
+            } else {
+                con.rollback();
+                System.out.println("Student not found!");
+            }
+
+        } catch (Exception e) {
+            try { con.rollback(); } catch (Exception ex) {}
+            System.out.println("Error: " + e.getMessage());
+        } finally {
+            try { con.setAutoCommit(true); } catch (Exception e) {}
+        }
+    }
+
+    // MAIN MENU
+    public static void main(String[] args) {
+
+        connectDB();
+        Scanner sc = new Scanner(System.in);
+        int choice;
+
+        do {
+            System.out.println("\n===== STUDENT MANAGEMENT =====");
+            System.out.println("1. Add Student");
+            System.out.println("2. View All Students");
+            System.out.println("3. Get Student");
+            System.out.println("4. Update Student");
+            System.out.println("5. Delete Student");
+            System.out.println("6. Exit");
+
+            choice = sc.nextInt();
+
+            switch (choice) {
+
+                case 1:
+                    System.out.print("ID: ");
+                    int id = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Name: ");
+                    String name = sc.nextLine();
+
+                    System.out.print("Age: ");
+                    int age = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Course: ");
+                    String course = sc.nextLine();
+
+                    System.out.print("Marks: ");
+                    double marks = sc.nextDouble();
+
+                    addStudent(id, name, age, course, marks);
+                    break;
+
+                case 2:
+                    viewStudents();
+                    break;
+
+                case 3:
+                    System.out.print("Enter ID: ");
+                    getStudent(sc.nextInt());
+                    break;
+
+                case 4:
+                    System.out.print("Enter ID: ");
+                    id = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Name: ");
+                    name = sc.nextLine();
+
+                    System.out.print("Age: ");
+                    age = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Course: ");
+                    course = sc.nextLine();
+
+                    System.out.print("Marks: ");
+                    marks = sc.nextDouble();
+
+                    updateStudent(id, name, age, course, marks);
+                    break;
+
+                case 5:
+                    System.out.print("Enter ID: ");
+                    deleteStudent(sc.nextInt());
+                    break;
+
+                case 6:
+                    System.out.println("Exiting...");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice");
+            }
+
+        } while (choice != 6);
+
+        sc.close();
+    }
+}
+
+5.Save This code in Student Management folder
+For Connecting The JAVA code to the MySQL Database using MySQL jar file put MySQL jar file in same folder where the JAVA code is in "lib" file
+
+
+6.Executing the JAVA code
+
+Run the JAVA code using Visual Studio Code
+
+Output
+===== STUDENT MANAGEMENT =====
+1. Add Student
+2. View All Students
+3. Get Student
+4. Update Student
+5. Delete Student
+6. Exit
+
+
+7.Execute Above Operations one by one for inserting values in database
+
+for example:
+
+8. In MySQL check for the inserte data using following queries
+
+SHOW DATABASES;
+
+USE student_db;
+
+SHOW TABLES;
+
+SELECT * FROM students;
